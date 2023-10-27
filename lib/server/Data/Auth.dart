@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:overlay_support/overlay_support.dart';
 
 DocumentReference<Map<String, dynamic>>? userDocReference;
@@ -11,9 +12,14 @@ DocumentReference<Map<String, dynamic>>? userDocReference;
 Color red = Colors.red;
 Color green = Colors.green;
 
+class PasswordCheckError implements Exception {
+  PasswordCheckError();
+}
+
 abstract class BaseAuth {
   Future<User> signIn({required String email, required String password});
-  Future<User> signUP({required String email, required String password});
+  Future<User> signUp(
+      {required String email, required String password, required String name});
   User? getCurrentUser();
 
   Future<void> signOut();
@@ -86,6 +92,21 @@ class Auth implements BaseAuth {
     }
 
     return user!;
+  }
+
+  Future<User> signUp(
+      {required String email,
+      required String password,
+      required String name}) async {
+    UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
+    User user = result.user!;
+    user.sendEmailVerification();
+
+    userDocReference =
+        FirebaseFirestore.instance.collection("usersU").doc(user.uid);
+     
+    return user;
   }
 
   @override

@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:page_transition/page_transition.dart';
+import 'package:rashient/screen/signup.dart';
 import '../server/Data/Auth.dart';
 import 'homeScreen.dart';
 
@@ -15,6 +18,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool hiden = true;
   bool remember = false;
+  bool emailCheck = false;
 
   List<FocusNode> focusNodes = List.generate(2, (index) => FocusNode());
   List<TextEditingController> controllers =
@@ -23,18 +27,25 @@ class _LoginPageState extends State<LoginPage> {
   // String password;
   final _formKey = GlobalKey<FormState>();
 
-  void signIN() async {
+  void signINMethod() async {
+    print("object");
     User user;
     try {
       user = await Auth().signIn(
           email: controllers[0].text.trim(), password: controllers[1].text);
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const HomePage()));
+      Get.to(() => HomePage(), transition: Transition.fadeIn);
+      // Navigator.pushReplacement(
+      //     context,
+      //     PageTransition(
+      //         child: HomePage(), type: PageTransitionType.bottomToTop));
     } catch (e) {
+      print("bf");
       SnackBar(
         content: Text("$e"),
       );
+      print(e);
     }
+    print('no');
   }
 
   @override
@@ -116,10 +127,15 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                 },
                                 decoration: InputDecoration(
-                                    suffixIcon: const Icon(
-                                      Icons.check_circle,
-                                      color: Colors.green,
-                                    ),
+                                    suffixIcon: emailCheck
+                                        ? const Icon(
+                                            Icons.check_circle,
+                                            color: Colors.green,
+                                          )
+                                        : const Icon(
+                                            Icons.check_circle,
+                                            color: Colors.grey,
+                                          ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(13),
                                       borderSide: const BorderSide(
@@ -131,15 +147,22 @@ class _LoginPageState extends State<LoginPage> {
                                         Color.fromARGB(132, 214, 212, 212),
                                     filled: true,
                                     focusColor: Colors.black),
-                                focusNode: focusNodes[1],
-                                controller: controllers[1],
+                                focusNode: focusNodes[0],
+                                controller: controllers[0],
                                 autofocus: false,
                                 onTap: () => FocusScope.of(context)
-                                    .requestFocus(focusNodes[1]),
+                                    .requestFocus(focusNodes[0]),
                                 keyboardType: TextInputType.text,
                                 onFieldSubmitted: (value) =>
                                     FocusScope.of(context)
-                                        .requestFocus(focusNodes[0]),
+                                        .requestFocus(focusNodes[1]),
+                                onChanged: (value) {
+                                  if (value.contains('@')) {
+                                    setState(() {
+                                      emailCheck = true;
+                                    });
+                                  }
+                                },
                                 // onSaved: (v) {
                                 //   FocusScope.of(context)
                                 //       .requestFocus(focusNodes[1]);
@@ -207,14 +230,15 @@ class _LoginPageState extends State<LoginPage> {
                                         Color.fromARGB(132, 214, 212, 212),
                                     filled: true,
                                     focusColor: Colors.black),
-                                focusNode: focusNodes[0],
-                                controller: controllers[0],
+                                focusNode: focusNodes[1],
+                                controller: controllers[1],
                                 autofocus: false,
                                 onTap: () => FocusScope.of(context)
-                                    .requestFocus(focusNodes[0]),
+                                    .requestFocus(focusNodes[1]),
                                 keyboardType: TextInputType.text,
-                                onFieldSubmitted: (value) =>
-                                    FocusScope.of(context).unfocus(),
+                                onFieldSubmitted: (value) {
+                                  FocusScope.of(context).unfocus();
+                                },
                                 // onSaved: (v) {
                                 //   FocusScope.of(context)
                                 //       .requestFocus(focusNodes[1]);
@@ -244,14 +268,21 @@ class _LoginPageState extends State<LoginPage> {
                                   const SizedBox(
                                     width: 5,
                                   ),
-                                  Text(
-                                    'Remember Me',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.libreFranklin(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w400,
+                                  TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        remember = !remember;
+                                      });
+                                    },
+                                    child: Text(
+                                      'Remember Me',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.libreFranklin(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w400,
+                                      ),
                                     ),
-                                  ),
+                                  )
                                 ]),
                           ),
                           Padding(
@@ -269,7 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                                       BorderRadius.all(Radius.circular(15))),
                               child: TextButton(
                                 onPressed: () {
-                                  signIN();
+                                  signINMethod();
                                 },
                                 style: ButtonStyle(
                                   padding: MaterialStateProperty.resolveWith<
@@ -342,29 +373,41 @@ class _LoginPageState extends State<LoginPage> {
                                 ]),
                           ),
                           Container(
-                            padding: EdgeInsets.only(top: 20),
+                            padding:
+                                EdgeInsets.only(top: 20, left: width * 0.14),
                             alignment: Alignment.center,
-                            child: RichText(
-                                text: TextSpan(children: [
-                              TextSpan(
-                                text: 'Don\'t have an account?',
-                                style: GoogleFonts.libreFranklin(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w400,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Don\'t have an account?',
+                                  style: GoogleFonts.libreFranklin(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                              const WidgetSpan(
-                                  child: SizedBox(
-                                width: 5,
-                              )),
-                              TextSpan(
-                                text: 'Create Now.',
-                                style: GoogleFonts.libreFranklin(
-                                    color: Color.fromARGB(255, 36, 96, 180),
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15),
-                              )
-                            ])),
+                                TextButton(
+                                    onPressed: () {
+                                      Get.to(() => SignUp(), transition: Transition.fadeIn);
+                                      // Navigator.pushReplacement(
+                                      //     context,
+                                      //     PageTransition(
+                                      //         child: SignUp(),
+                                      //         type: PageTransitionType
+                                      //             .rightToLeftJoined));
+                                      // MaterialPageRoute(
+                                      //     builder: (context) =>
+                                      //         const SignUp()));
+                                    },
+                                    child: Text(
+                                      'Create Now.',
+                                      style: GoogleFonts.libreFranklin(
+                                          color:
+                                              Color.fromARGB(255, 36, 96, 180),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15),
+                                    ))
+                              ],
+                            ),
                           )
                         ]),
                   ))),
